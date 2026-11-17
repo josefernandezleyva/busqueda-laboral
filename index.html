@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1F3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tablero">
+<title>Tablero</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--navy:#1F3864;--bg:#F4F6FA;--card:#fff;--ink:#1d2433;--muted:#667085;--line:#E4E7EC;--a:#1E8E3E;--b:#5FB878;--c:#E3A008;--d:#D93025;--blue:#2563EB}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 10px}
+header .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+header h1{font-size:17px;margin:0;font-weight:650}
+header small{opacity:.75;font-size:12px}
+.icon-btn{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:10px;padding:7px 10px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.kpi{background:rgba(255,255,255,.12);border-radius:10px;padding:6px 4px;text-align:center}
+.kpi b{display:block;font-size:19px}
+.kpi span{font-size:10.5px;opacity:.85;line-height:1.1;display:block}
+.kpi.alert b{color:#FFB4AB}
+.tools{padding:10px 12px 4px;display:flex;flex-direction:column;gap:8px}
+.search{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;background:#fff}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font-size:13px;color:var(--ink)}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+main{padding:4px 12px 96px}
+.card{background:var(--card);border-radius:14px;padding:12px;margin:8px 0;box-shadow:0 1px 2px rgba(16,24,40,.06);border:1px solid var(--line);display:flex;gap:10px}
+.score{flex:0 0 52px;height:52px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:700}
+.score small{font-size:10px;font-weight:600;opacity:.9}
+.cat-A{background:var(--a)}.cat-B{background:var(--b)}.cat-C{background:var(--c)}.cat-D{background:var(--d)}.cat-N{background:#98A2B3}
+.card .body{flex:1;min-width:0}
+.card .t{font-weight:650;font-size:15px}
+.card .c{color:var(--muted);font-size:13.5px;margin-top:1px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.tag{font-size:11.5px;border-radius:6px;padding:2px 7px;background:#EEF2F6;color:#344054}
+.tag.red{background:#FDECEA;color:#B42318;font-weight:600}
+.tag.green{background:#E7F6EC;color:#146C2E;font-weight:600}
+.tag.amber{background:#FEF3C7;color:#92400E}
+.tag.blue{background:#E8F0FE;color:#1A56DB}
+.rank{font-size:11px;color:var(--muted)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{border:0;background:none;padding:10px 2px 9px;font-size:12px;color:var(--muted)}
+nav button b{display:block;font-size:18px;line-height:1.1}
+nav button.on{color:var(--navy);font-weight:700}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+#login .box{background:#fff;border-radius:18px;padding:26px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 30px rgba(16,24,40,.08)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;padding:12px 16px;font-size:15px;font-weight:600;background:var(--navy);color:#fff;width:100%}
+.btn.sec{background:#EEF2F6;color:var(--ink)}
+.btn.green{background:var(--a)}
+.muted{color:var(--muted);font-size:13px}
+.sheet{position:fixed;inset:0;background:rgba(16,24,40,.45);z-index:20;display:none}
+.sheet.open{display:block}
+.panel{position:absolute;left:0;right:0;bottom:0;top:6vh;background:var(--bg);border-radius:18px 18px 0 0;overflow-y:auto;padding:0 0 calc(24px + env(safe-area-inset-bottom))}
+.panel .top{position:sticky;top:0;background:var(--navy);color:#fff;padding:14px;border-radius:18px 18px 0 0;display:flex;gap:10px;align-items:flex-start}
+.panel .top h2{font-size:16px;margin:0}
+.panel .top p{margin:2px 0 0;font-size:13px;opacity:.85}
+.sec{background:#fff;margin:10px 12px;border-radius:14px;border:1px solid var(--line);padding:10px 12px}
+.sec h3{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:2px 0 8px}
+.kv{display:grid;grid-template-columns:42% 58%;gap:4px 8px;font-size:13.5px}
+.kv div:nth-child(odd){color:var(--muted)}
+.para{font-size:13.5px;margin:0 0 8px}
+.para b{display:block;font-size:12px;color:var(--muted);font-weight:600}
+label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+select,input[type=date],input[type=text],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;background:#fff;font-family:inherit}
+.links{display:flex;flex-direction:column;gap:8px}
+.links a{display:block;text-align:center;padding:11px;border-radius:12px;background:#E8F0FE;color:#1A56DB;text-decoration:none;font-weight:600}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;font-size:14px;z-index:30;display:none}
+.alerta-Vencido{background:#FDECEA;color:#B42318}.alerta-Esta{background:#FEF3C7;color:#92400E}.alerta-Programado{background:#E8F0FE;color:#1A56DB}
+.close{background:rgba(255,255,255,.18);border:0;color:#fff;border-radius:10px;padding:6px 10px;font-size:14px;margin-left:auto}
+</style>
+</head>
+<body>
+<div id="login">
+  <div class="box">
+    <div style="font-size:40px">📋</div>
+    <h2 style="margin:6px 0 4px">Tablero</h2>
+    <p class="muted" style="margin:0 0 18px">Acceso privado. Los datos se leen de una hoja privada de Google: solo la cuenta dueña puede verlos.</p>
+    <button class="btn" id="btnLogin">Entrar con Google</button>
+    <p class="muted" id="loginMsg" style="margin-top:12px"></p>
+    <button class="btn sec" id="btnDemo" style="margin-top:6px">Ver demostración (datos ficticios)</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="row"><div><h1 id="hTitle">Tablero</h1><small id="hSub">—</small></div>
+      <div style="display:flex;gap:6px"><button class="icon-btn" id="btnRefresh">↻</button><button class="icon-btn" id="btnSheet">Hoja</button></div></div>
+    <div class="kpis">
+      <div class="kpi"><b id="kTotal">0</b><span>Vacantes</span></div>
+      <div class="kpi"><b id="kComp">0</b><span>Compat. ≥ 70%</span></div>
+      <div class="kpi"><b id="kPost">0</b><span>Postulaciones</span></div>
+      <div class="kpi" id="kpiAlert"><b id="kAlert">0</b><span>Seguim. por vencer</span></div>
+    </div>
+  </header>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Buscar empresa, puesto, sector…">
+    <div class="chips" id="chips"></div>
+  </div>
+  <main id="list"></main>
+  <nav>
+    <button data-tab="prio" class="on"><b>★</b>Prioridad</button>
+    <button data-tab="post"><b>✓</b>Postulaciones</button>
+    <button data-tab="seg"><b>⏰</b>Seguimiento</button>
+    <button data-tab="all"><b>≡</b>Todas</button>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CFG = Object.assign({clientId:"", sheetId:"", scope:"https://www.googleapis.com/auth/spreadsheets"}, window.APP_CONFIG||{});
+const OP = "OPORTUNIDADES", SEG = "SEGUIMIENTO";
+const H = {id:"ID", emp:"Empresa", pue:"Nombre del puesto", area:"Área o gerencia", sec:"Sector empresarial", ubi:"Ubicación", mod:"Modalidad", fue:"Portal o fuente",
+  fpub:"Fecha de publicación", ant:"Antigüedad (días)", rango:"Rango de antigüedad", comp:"% compatibilidad", cat:"Categoría", niv:"Nivel jerárquico", fam:"Familia de cargo",
+  expr:"Experiencia requerida", expc:"Experiencia que cumplo", cum:"Principales requisitos que cumplo", par:"Requisitos que cumplo parcialmente", des:"Requisitos deseables que tengo",
+  bre:"Principales brechas identificadas", tec:"Evaluación de conocimientos técnicos", lid:"Experiencia en liderazgo requerida", ing:"Inglés requerido", inge:"Inglés excluyente",
+  exc:"¿Excluyente no cumplido?", excd:"Detalle del excluyente no cumplido", certr:"Certificaciones requeridas", certd:"Certificaciones deseables", form:"Formación académica requerida",
+  herr:"Herramientas y tecnologías solicitadas", dest:"Competencias a destacar en mi CV", sal:"Rango salarial publicado", mon:"Moneda", con:"Tipo de contrato", ben:"Beneficios identificados",
+  hor:"Horario o disponibilidad", est:"Estado de postulación", pos:"¿Ya postulé?", fpos:"Fecha de postulación", fult:"Fecha de último seguimiento", fprox:"Próxima fecha de seguimiento",
+  eproc:"Estado del proceso (detalle)", cont:"Contacto del reclutador", resp:"Responsable de la publicación", mail:"Correo de contacto", lirec:"LinkedIn del reclutador",
+  lpost:"Link directo de postulación", lorig:"Link de la publicación original", instr:"Instrucciones de postulación", dup:"Fuentes adicionales / duplicados", sol:"Solicitudes (competencia)",
+  prio:"Puntaje de prioridad", rank:"Ranking", acc:"Recomendación de acción", not:"Notas / vigencia"};
+const ESTADOS = ["Identificada","Pendiente de evaluación","Priorizada para postular","Postulación pendiente","Postulado","Contacto con reclutador","Entrevista inicial","Entrevista técnica","Entrevista con gerencia","En evaluación","Oferta laboral","Rechazado","Proceso cerrado","Descartada por decisión propia"];
+const ACTIVOS = ESTADOS.slice(4,11);
+let token=null, headers=[], rows=[], seg=[], tab="prio", filt={cat:null, hideExc:false}, demo=false;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct=v=>(typeof v==="number")?Math.round(v*100)+"%":"—";
+function toast(m){const t=$("#toast");t.textContent=m;t.style.display="block";clearTimeout(t._h);t._h=setTimeout(()=>t.style.display="none",2600)}
+function colL(i){let s="";i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s}
+function g(r,k){return r[H[k]]}
+function toISO(v){ if(!v) return ""; const m=String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; return /^\d{4}-\d{2}-\d{2}$/.test(v)?v:""; }
+function today(){const d=new Date();return d.toISOString().slice(0,10)}
+
+// ---------- Auth ----------
+function initAuth(){
+  if(!CFG.clientId||!CFG.sheetId){ $("#loginMsg").textContent="Falta configurar clientId y sheetId en config.js (manual, paso 3)."; $("#btnLogin").disabled=true; $("#btnLogin").style.opacity=.5; return; }
+  const saved=JSON.parse(sessionStorage.getItem("tk")||"null");
+  if(saved&&saved.exp>Date.now()){token=saved.t; start(); return;}
+  const tc=()=>google.accounts.oauth2.initTokenClient({client_id:CFG.clientId, scope:CFG.scope, callback:(r)=>{
+    if(r.error){$("#loginMsg").textContent="No se pudo iniciar sesión: "+r.error;return}
+    token=r.access_token; sessionStorage.setItem("tk",JSON.stringify({t:token,exp:Date.now()+(r.expires_in-60)*1000})); start(); }});
+  $("#btnLogin").onclick=()=>{ if(!window.google||!google.accounts){toast("Cargando Google… intenta otra vez");return} tc().requestAccessToken({prompt:""}); };
+}
+async function api(path, opt={}){
+  const r=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+CFG.sheetId+path,{...opt,headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"}});
+  if(r.status===401){sessionStorage.removeItem("tk");token=null;location.reload();throw new Error("401")}
+  if(!r.ok){const t=await r.text();throw new Error(r.status+" "+t.slice(0,160))}
+  return r.json();
+}
+
+// ---------- Data ----------
+function parse(values){ headers=values[0]||[]; rows=values.slice(1).map((v,i)=>{const o={_row:i+2}; headers.forEach((h,j)=>o[h]=v[j]??""); return o}).filter(o=>o[H.id]); }
+function dmy(v){const m=String(v||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null}
+function parseSeg(values){ const t0=new Date();t0.setHours(0,0,0,0);
+  seg=(values||[]).slice(1).map((v,i)=>{const d=dmy(v[7]);const dias=d?Math.round((d-t0)/864e5):null;
+    return {_row:i+5,fecha:v[0],id:v[1],emp:v[2],pue:v[3],tipo:v[4],det:v[5],paso:v[6],fpaso:v[7],dias,alerta:dias==null?"Sin fecha":dias<0?"Vencido":dias<=2?"Esta semana":"Programado"}}).filter(s=>s.id&&s.id!=="ID"); }
+async function load(){
+  if(demo){ parse(DEMO.op); parseSeg(DEMO.seg); render(); return; }
+  if(window.__LOCAL__){ parse(window.__LOCAL__.op); parseSeg(window.__LOCAL__.seg); render(); return; }
+  $("#hSub").textContent="Cargando…";
+  const q="?ranges="+encodeURIComponent(OP+"!A1:CZ400")+"&ranges="+encodeURIComponent(SEG+"!A4:J200")+"&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING";
+  const d=await api("/values:batchGet"+q);
+  parse(d.valueRanges[0].values||[]); parseSeg(d.valueRanges[1].values||[]); render();
+}
+async function start(){ $("#login").style.display="none"; $("#app").style.display="block";
+  try{ await load(); }catch(e){ $("#hSub").textContent="Error al leer la hoja"; toast(e.message); } }
+
+// ---------- Render ----------
+function catClass(c){return "cat-"+(["A","B","C","D"].includes(c)?c:"N")}
+function matches(r){
+  const q=$("#q").value.trim().toLowerCase();
+  if(q && ![H.emp,H.pue,H.sec,H.area,H.fam].some(k=>String(r[k]).toLowerCase().includes(q))) return false;
+  if(filt.cat && r[H.cat]!==filt.cat) return false;
+  if(filt.hideExc && r[H.exc]==="Sí") return false;
+  return true;
+}
+function card(r){
+  const comp=r[H.comp], cat=r[H.cat]||"—", exc=r[H.exc]==="Sí", est=r[H.est], acc=r[H.acc];
+  const tags=[];
+  if(r[H.niv]) tags.push(`<span class="tag">${esc(r[H.niv])}</span>`);
+  if(r[H.mod]&&r[H.mod]!=="No especificado") tags.push(`<span class="tag">${esc(r[H.mod])}</span>`);
+  if(r[H.ant]!=="" && r[H.ant]!=null) tags.push(`<span class="tag">${esc(r[H.ant])} días</span>`);
+  if(exc) tags.push(`<span class="tag red">Excluyente</span>`);
+  if(acc==="Postular inmediatamente") tags.push(`<span class="tag green">Postular ya</span>`);
+  else if(acc==="Postular adaptando CV") tags.push(`<span class="tag blue">Adaptar CV</span>`);
+  if(ACTIVOS.includes(est)) tags.push(`<span class="tag amber">${esc(est)}</span>`);
+  return `<div class="card" data-id="${esc(r[H.id])}"><div class="score ${catClass(cat)}">${typeof comp==="number"?Math.round(comp*100):"—"}<small>${esc(cat)}</small></div>
+  <div class="body"><div class="t">${esc(r[H.pue])}</div><div class="c">${esc(r[H.emp])} · ${esc(r[H.ubi]||"")}</div><div class="tags">${tags.join("")}</div>
+  ${r[H.rank]!==""&&r[H.rank]!=null?`<div class="rank">Ranking #${esc(r[H.rank])} · ${esc(r[H.id])}</div>`:`<div class="rank">${esc(r[H.id])}</div>`}</div></div>`;
+}
+function renderChips(){
+  const cats=["A","B","C","D"].map(c=>`<button class="chip ${filt.cat===c?"on":""}" data-cat="${c}">Cat. ${c}</button>`).join("");
+  $("#chips").innerHTML=`<button class="chip ${!filt.cat?"on":""}" data-cat="">Todas</button>${cats}<button class="chip ${filt.hideExc?"on":""}" data-exc="1">Ocultar excluyentes</button>`;
+}
+function render(){
+  const evaluated=rows.filter(r=>typeof r[H.comp]==="number");
+  $("#kTotal").textContent=rows.length;
+  $("#kComp").textContent=evaluated.filter(r=>r[H.comp]>=.7).length;
+  $("#kPost").textContent=rows.filter(r=>r[H.pos]==="Sí").length;
+  const alerts=seg.filter(s=>s.alerta==="Vencido"||s.alerta==="Esta semana").length;
+  $("#kAlert").textContent=alerts; $("#kpiAlert").classList.toggle("alert",alerts>0);
+  $("#hSub").textContent=(demo?"Demostración · ":"")+"Actualizado "+new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+  renderChips(); document.querySelector(".tools").style.display=(tab==="seg")?"none":"flex";
+  const L=$("#list");
+  if(tab==="seg"){
+    const items=[...seg].sort((a,b)=>(a.dias??999)-(b.dias??999));
+    L.innerHTML=(items.length?items.map(s=>`<div class="card" data-id="${esc(s.id)}"><div class="body"><div class="t">${esc(s.paso||s.det)}</div>
+      <div class="c">${esc(s.emp)} · ${esc(s.pue)}</div><div class="tags"><span class="tag alerta-${esc(String(s.alerta).split(" ")[0])}">${esc(s.alerta||"")}</span><span class="tag">${esc(s.fpaso||"Sin fecha")}</span><span class="tag">${esc(s.tipo||"")}</span></div></div></div>`).join(""):`<div class="empty">Sin seguimientos registrados.</div>`)
+      +`<button class="btn sec" id="btnNewSeg" style="margin-top:8px">+ Registrar seguimiento</button>`;
+    $("#btnNewSeg").onclick=()=>openSegForm();
+  } else {
+    let items=rows.filter(matches);
+    if(tab==="prio") items=items.filter(r=>r[H.rank]!==""&&r[H.rank]!=null&&r[H.acc]!=="No justifica postulación").sort((a,b)=>a[H.rank]-b[H.rank]);
+    if(tab==="post") items=items.filter(r=>r[H.pos]==="Sí"||ACTIVOS.includes(r[H.est]));
+    if(tab==="all") items=items.sort((a,b)=>(b[H.prio]||-999)-(a[H.prio]||-999));
+    L.innerHTML=items.length?items.map(card).join(""):`<div class="empty">No hay vacantes con estos filtros.</div>`;
+  }
+  L.querySelectorAll(".card[data-id]").forEach(el=>el.onclick=()=>openDetail(el.dataset.id));
+}
+
+// ---------- Detail ----------
+function kv(pairs){return `<div class="kv">${pairs.filter(([,v])=>v!==""&&v!=null&&v!=="No especificado"&&v!=="-").map(([k,v])=>`<div>${esc(k)}</div><div>${esc(v)}</div>`).join("")}</div>`}
+function para(pairs){return pairs.filter(([,v])=>v&&v!=="-"&&v!=="No especificado").map(([k,v])=>`<p class="para"><b>${esc(k)}</b>${esc(v)}</p>`).join("")}
+function openDetail(id){
+  const r=rows.find(x=>x[H.id]===id); if(!r) return;
+  const link=[r[H.lpost],r[H.lorig]].filter(u=>/^https?:/.test(u));
+  const uniq=[...new Set(link)];
+  $("#panel").innerHTML=`<div class="top"><div class="score ${catClass(r[H.cat])}">${typeof r[H.comp]==="number"?Math.round(r[H.comp]*100):"—"}<small>${esc(r[H.cat])}</small></div>
+    <div><h2>${esc(r[H.pue])}</h2><p>${esc(r[H.emp])}</p><p>${esc(r[H.ubi])} · ${esc(r[H.mod])}</p></div><button class="close" id="xClose">✕</button></div>
+  ${r[H.exc]==="Sí"?`<div class="sec" style="border-color:#F5C2C0;background:#FFF5F4"><h3 style="color:#B42318">Excluyente no cumplido</h3><p class="para">${esc(r[H.excd])}</p></div>`:""}
+  <div class="sec"><h3>Evaluación</h3>${kv([["Recomendación",r[H.acc]],["Ranking",r[H.rank]],["Puntaje prioridad",typeof r[H.prio]==="number"?r[H.prio].toFixed(1):""],["Nivel",r[H.niv]],["Familia",r[H.fam]],["Sector",r[H.sec]],["Publicado",r[H.fpub]],["Antigüedad",r[H.rango]],["Competencia",r[H.sol]]])}</div>
+  <div class="sec"><h3>Encaje con tu perfil</h3>${para([["Experiencia requerida",r[H.expr]],["Tu experiencia",r[H.expc]],["Cumples",r[H.cum]],["Cumples parcialmente",r[H.par]],["Deseables que tienes",r[H.des]],["Brechas",r[H.bre]],["Qué destacar en tu CV",r[H.dest]]])}</div>
+  <div class="sec"><h3>Requisitos</h3>${kv([["Inglés",r[H.ing]],["Inglés excluyente",r[H.inge]],["Certificaciones requeridas",r[H.certr]],["Certificaciones deseables",r[H.certd]],["Formación",r[H.form]],["Técnica",r[H.tec]],["Liderazgo",r[H.lid]]])}${para([["Herramientas",r[H.herr]]])}</div>
+  <div class="sec"><h3>Condiciones</h3>${kv([["Salario",r[H.sal]],["Moneda",r[H.mon]],["Contrato",r[H.con]],["Beneficios",r[H.ben]],["Horario",r[H.hor]]])}</div>
+  <div class="sec"><h3>Contacto</h3>${kv([["Reclutador",r[H.cont]],["Responsable",r[H.resp]],["Correo",r[H.mail]],["Instrucciones",r[H.instr]],["Duplicados",r[H.dup]]])}${para([["Notas",r[H.not]]])}
+    <div class="links">${uniq.map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${i===0?"Abrir aviso / postular":"Publicación original"}</a>`).join("")}</div></div>
+  <div class="sec"><h3>Actualizar postulación</h3>
+    <label>Estado</label><select id="fEst">${ESTADOS.map(e=>`<option ${e===r[H.est]?"selected":""}>${e}</option>`).join("")}</select>
+    <label>¿Ya postulé?</label><select id="fPos"><option ${r[H.pos]!=="Sí"?"selected":""}>No</option><option ${r[H.pos]==="Sí"?"selected":""}>Sí</option></select>
+    <label>Fecha de postulación</label><input type="date" id="fFpos" value="${toISO(r[H.fpos])}">
+    <label>Último seguimiento</label><input type="date" id="fFult" value="${toISO(r[H.fult])}">
+    <label>Próximo seguimiento</label><input type="date" id="fFprox" value="${toISO(r[H.fprox])}">
+    <label>Detalle del proceso</label><input type="text" id="fEproc" value="${esc(r[H.eproc])}">
+    <label>Notas</label><textarea id="fNot" rows="3">${esc(r[H.not])}</textarea>
+    <button class="btn green" id="btnSave" style="margin-top:12px">Guardar en la hoja</button>
+    <p class="muted" style="margin:8px 0 0">No marques “Postulado” hasta haber enviado tu postulación.</p></div>`;
+  $("#sheet").classList.add("open"); $("#panel").scrollTop=0;
+  $("#xClose").onclick=closeSheet;
+  $("#btnSave").onclick=()=>save(r);
+}
+function closeSheet(){$("#sheet").classList.remove("open")}
+$("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet")closeSheet()});
+
+async function save(r){
+  const upd={est:$("#fEst").value,pos:$("#fPos").value,fpos:$("#fFpos").value,fult:$("#fFult").value,fprox:$("#fFprox").value,eproc:$("#fEproc").value,not:$("#fNot").value};
+  if(upd.est==="Postulado"&&upd.pos!=="Sí"){upd.pos="Sí"}
+  if(upd.pos==="Sí"&&!upd.fpos){upd.fpos=today()}
+  if(demo||window.__LOCAL__){Object.entries(upd).forEach(([k,v])=>r[H[k]]=v);closeSheet();render();toast("Guardado (modo demostración)");return}
+  const data=Object.entries(upd).map(([k,v])=>{const i=headers.indexOf(H[k]);return i<0?null:{range:`${OP}!${colL(i)}${r._row}`,values:[[v]]}}).filter(Boolean);
+  try{ await api("/values:batchUpdate",{method:"POST",body:JSON.stringify({valueInputOption:"USER_ENTERED",data})}); closeSheet(); toast("Guardado en la hoja"); await load(); }
+  catch(e){ toast("No se pudo guardar: "+e.message) }
+}
+function openSegForm(){
+  const opts=rows.map(r=>`<option value="${esc(r[H.id])}">${esc(r[H.id])} · ${esc(r[H.emp])}</option>`).join("");
+  $("#panel").innerHTML=`<div class="top"><div><h2>Registrar seguimiento</h2><p>Se guarda en la pestaña SEGUIMIENTO</p></div><button class="close" id="xClose">✕</button></div>
+  <div class="sec"><label>Vacante</label><select id="sId">${opts}</select>
+  <label>Tipo de interacción</label><select id="sTipo">${["Llamada","Correo","Mensaje LinkedIn","Entrevista","Prueba técnica","Oferta","Revisión interna","Acción propia"].map(x=>`<option>${x}</option>`).join("")}</select>
+  <label>Detalle</label><textarea id="sDet" rows="3"></textarea><label>Próximo paso</label><input type="text" id="sPaso">
+  <label>Fecha del próximo paso</label><input type="date" id="sF"><button class="btn green" id="sSave" style="margin-top:12px">Guardar</button></div>`;
+  $("#sheet").classList.add("open"); $("#xClose").onclick=closeSheet;
+  $("#sSave").onclick=async()=>{
+    const v={fecha:today(),id:$("#sId").value,tipo:$("#sTipo").value,det:$("#sDet").value,paso:$("#sPaso").value,fpaso:$("#sF").value};
+    const used=new Set(seg.map(s=>s._row)); let row=5; while(used.has(row)) row++;
+    if(row>40){toast("La pestaña SEGUIMIENTO está llena (filas 5-40): amplíala en la hoja");return}
+    if(demo||window.__LOCAL__){seg.push({_row:row,fecha:v.fecha,id:v.id,emp:"",pue:"",tipo:v.tipo,det:v.det,paso:v.paso,fpaso:v.fpaso,alerta:"Programado"});closeSheet();render();toast("Guardado (modo demostración)");return}
+    try{ await api("/values:batchUpdate",{method:"POST",body:JSON.stringify({valueInputOption:"USER_ENTERED",data:[
+      {range:`${SEG}!A${row}:B${row}`,values:[[v.fecha,v.id]]},{range:`${SEG}!E${row}:H${row}`,values:[[v.tipo,v.det,v.paso,v.fpaso]]}]})});
+      closeSheet(); toast("Seguimiento guardado"); await load(); }catch(e){toast("No se pudo guardar: "+e.message)}
+  };
+}
+
+// ---------- Events ----------
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));b.classList.add("on");tab=b.dataset.tab;render();window.scrollTo(0,0)});
+$("#q").addEventListener("input",render);
+$("#chips").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;if(b.dataset.exc){filt.hideExc=!filt.hideExc}else{filt.cat=b.dataset.cat||null}render()});
+$("#btnRefresh").onclick=()=>load().then(()=>toast("Datos actualizados")).catch(e=>toast(e.message));
+$("#btnSheet").onclick=()=>{ if(CFG.sheetId) window.open("https://docs.google.com/spreadsheets/d/"+CFG.sheetId+"/edit","_blank"); };
+$("#btnDemo").onclick=()=>{demo=true;start()};
+
+// ---------- Demo data (ficticia) ----------
+const DH=[H.id,H.emp,H.pue,H.sec,H.ubi,H.mod,H.ant,H.rango,H.comp,H.cat,H.niv,H.fam,H.exc,H.excd,H.bre,H.dest,H.est,H.pos,H.rank,H.prio,H.acc,H.lorig];
+const DEMO={op:[DH,
+ ["OP-901","Industrias Ejemplo S.A.","Jefe de Proyectos de TI","Manufactura","San Isidro, Lima","Híbrida",5,"4-7 días",.86,"A","Jefe","Jefatura/Gestión de Proyectos TI","No","Ninguno identificado","PMP deseable","Liderazgo de proyectos SAP","Priorizada para postular","No",1,92.5,"Postular inmediatamente","https://example.com"],
+ ["OP-902","Servicios Demo SAC","Subgerente de Tecnología","Servicios","Lima","Presencial",12,"8-15 días",.74,"B","Subgerente","Subgerencia/Gerencia TI","No","Ninguno identificado","Inglés avanzado","Gestión de presupuesto","Postulado","Sí",2,80.1,"Postular adaptando CV","https://example.com"],
+ ["OP-903","Consultora Ficticia","SAP Project Manager","Consultoría TI","Surco, Lima","Híbrida",20,"16-30 días",.71,"B","Líder/PM Senior","Gestión de proyectos SAP/ERP","Sí","Certificación SAP vigente","Certificación SAP","S/4HANA","Identificada","No",3,48.2,"Evaluar brechas","https://example.com"]],
+ seg:[["Fecha","ID","Empresa","Puesto","Tipo","Detalle","Próximo paso","Fecha próximo","Días","Alerta"],["16/11/2026","OP-902","Servicios Demo SAC","Subgerente de Tecnología","Correo","Envío de CV","Llamar al reclutador","18/11/2026",2,"Esta semana"]]};
+
+initAuth();
+</script>
+</body>
+</html>
