@@ -217,9 +217,8 @@ function render(){
   const L=$("#list");
   if(tab==="seg"){
     const items=[...seg].sort((a,b)=>(a.dias??999)-(b.dias??999));
-    L.innerHTML=(items.length?items.map(s=>`<div class="card" data-id="${esc(s.id)}"><div class="body"><div class="t">${esc(s.paso||s.det)}</div>
-      <div class="c">${esc(s.emp)} · ${esc(s.pue)}</div><div class="tags"><span class="tag alerta-${esc(String(s.alerta).split(" ")[0])}">${esc(s.alerta||"")}</span><span class="tag">${esc(s.fpaso||"Sin fecha")}</span><span class="tag">${esc(s.tipo||"")}</span></div></div></div>`).join(""):`<div class="empty">Sin seguimientos registrados.</div>`)
-      +`<button class="btn sec" id="btnNewSeg" style="margin-top:8px">+ Registrar seguimiento</button>`;
+    L.innerHTML=`<button class="btn sec" id="btnNewSeg" style="margin:4px 0 6px">+ Registrar seguimiento</button>`+(items.length?items.map(s=>`<div class="card" data-id="${esc(s.id)}"><div class="body"><div class="t">${esc(s.paso||s.det)}</div>
+      <div class="c">${esc(s.emp)} · ${esc(s.pue)}</div><div class="tags"><span class="tag alerta-${esc(String(s.alerta).split(" ")[0])}">${esc(s.alerta||"")}</span><span class="tag">${esc(s.fpaso||"Sin fecha")}</span><span class="tag">${esc(s.tipo||"")}</span></div></div></div>`).join(""):`<div class="empty">Sin seguimientos registrados.</div>`);
     $("#btnNewSeg").onclick=()=>openSegForm();
   } else {
     let items=rows.filter(matches);
